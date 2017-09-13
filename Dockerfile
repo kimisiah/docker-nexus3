@@ -20,7 +20,7 @@ LABEL vendor=Sonatype \
   com.sonatype.license="Apache License, Version 2.0" \
   com.sonatype.name="Nexus Repository Manager base image"
 
-ARG NEXUS_VERSION=3.5.1-02
+ARG NEXUS_VERSION=3.1.0-04
 ARG NEXUS_DOWNLOAD_URL=https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-unix.tar.gz
 
 RUN yum install -y \
@@ -37,9 +37,9 @@ ENV JAVA_HOME=/opt/java \
 # configure nexus runtime
 ENV SONATYPE_DIR=/opt/sonatype
 ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
-  NEXUS_DATA=/nexus-data \
-  NEXUS_CONTEXT='' \
-  SONATYPE_WORK=${SONATYPE_DIR}/sonatype-work
+    NEXUS_DATA=/nexus-data \
+    NEXUS_CONTEXT=/nexus3 \
+    SONATYPE_WORK=${SONATYPE_DIR}/sonatype-work
 
 # install Oracle JRE
 RUN mkdir -p /opt \
@@ -60,7 +60,7 @@ RUN mkdir -p ${NEXUS_HOME} \
 
 # configure nexus
 RUN sed \
-    -e '/^nexus-context/ s:$:${NEXUS_CONTEXT}:' \
+    -e '/^nexus-context/ s:$:`print ${NEXUS_CONTEXT}`:' \
     -i ${NEXUS_HOME}/etc/nexus-default.properties \
   && sed \
     -e '/^-Xms/d' \
