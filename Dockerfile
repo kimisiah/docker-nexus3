@@ -38,7 +38,7 @@ ENV JAVA_HOME=/opt/java \
 ENV SONATYPE_DIR=/opt/sonatype
 ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
     NEXUS_DATA=/nexus-data \
-    NEXUS_CONTEXT=/nexus3 \
+    NEXUS_CONTEXT=nexus3 \
     SONATYPE_WORK=${SONATYPE_DIR}/sonatype-work
 
 # install Oracle JRE
@@ -58,15 +58,20 @@ RUN mkdir -p ${NEXUS_HOME} \
   | tar x -C ${NEXUS_HOME} --strip-components=1 nexus-${NEXUS_VERSION} \
   && chown -R root:root ${NEXUS_HOME}
 
-# configure nexus
-RUN sed \
-    -e '/^nexus-context/ s:$:`print ${NEXUS_CONTEXT}`:' \
-    -i ${NEXUS_HOME}/etc/nexus-default.properties \
-  && sed \
-    -e '/^-Xms/d' \
-    -e '/^-Xmx/d' \
-    -e '/^-XX:MaxDirectMemorySize/d' \
-    -i ${NEXUS_HOME}/bin/nexus.vmoptions
+# configure nexusi
+RUN mkdir -p ${NEXUS_HOME}/scripts
+COPY resources/configure_nexus.sh ${NEXUS_HOME}/scripts/
+RUN chmod +x ${NEXUS_HOME}/scripts/configure_nexus.sh \
+  && ${NEXUS_HOME}/scripts/configure_nexus.sh
+
+#RUN sed \
+#    -e '/^nexus-context/ s:$:`print ${NEXUS_CONTEXT}`:' \
+#    -i ${NEXUS_HOME}/etc/nexus-default.properties \
+#  && sed \
+#    -e '/^-Xms/d' \
+#    -e '/^-Xmx/d' \
+#    -e '/^-XX:MaxDirectMemorySize/d' \
+#    -i ${NEXUS_HOME}/bin/nexus.vmoptions
 
 RUN useradd -r -u 200 -m -c "nexus role account" -d ${NEXUS_DATA} -s /bin/false nexus \
   && mkdir -p ${NEXUS_DATA}/etc ${NEXUS_DATA}/log ${NEXUS_DATA}/tmp ${SONATYPE_WORK} \
