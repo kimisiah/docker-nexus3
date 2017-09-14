@@ -38,7 +38,7 @@ ENV JAVA_HOME=/opt/java \
 ENV SONATYPE_DIR=/opt/sonatype
 ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
     NEXUS_DATA=/nexus-data \
-    NEXUS_CONTEXT=nexus3 \
+    NEXUS_CONTEXT=/nexus3 \
     SONATYPE_WORK=${SONATYPE_DIR}/sonatype-work
 
 # install Oracle JRE
@@ -65,7 +65,7 @@ RUN chmod +x ${NEXUS_HOME}/scripts/configure_nexus.sh \
   && ${NEXUS_HOME}/scripts/configure_nexus.sh
 
 #RUN sed \
-#    -e '/^nexus-context/ s:$:`print ${NEXUS_CONTEXT}`:' \
+#    -e '/^nexus-context/ s:$:'"${NEXUS_CONTEXT}"':' \
 #    -i ${NEXUS_HOME}/etc/nexus-default.properties \
 #  && sed \
 #    -e '/^-Xms/d' \
@@ -78,12 +78,17 @@ RUN useradd -r -u 200 -m -c "nexus role account" -d ${NEXUS_DATA} -s /bin/false 
   && ln -s ${NEXUS_DATA} ${SONATYPE_WORK}/nexus3 \
   && chown -R nexus:nexus ${NEXUS_DATA}
 
+COPY resources/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 VOLUME ${NEXUS_DATA}
+VOLUME ${SONATYPE_DIR}
 
 EXPOSE 8081
-USER nexus
+#USER nexus
 WORKDIR ${NEXUS_HOME}
 
 ENV INSTALL4J_ADD_VM_PARAMS="-Xms1200m -Xmx1200m -XX:MaxDirectMemorySize=2g"
 
-CMD ["bin/nexus", "run"]
+#CMD ["bin/nexus", "run"]
+ENTRYPOINT ["/entrypoint.sh"]
